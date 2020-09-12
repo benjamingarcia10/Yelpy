@@ -10,87 +10,123 @@ import UIKit
 import AlamofireImage
 
 class RestaurantsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    
+        
+    // Outlets
     @IBOutlet weak var tableView: UITableView!
     
-    // ––––– TODO: Build Restaurant Class
+    // Initiliazers
+    // ––––– TODO: change array to –> [Restaurant]
+    var restaurantsArray: [Restaurant] = []
     
-    // –––––– TODO: Update restaurants Array to an array of Restaurants
-    var restaurantsArray: [Restaurant?] = []
+    // ––––– TODO: Add Search Bar Outlet + Variable for filtered Results
+    @IBOutlet weak var searchBar: UISearchBar!
+    var filteredRestaurants: [Restaurant] = []
     
     
+    
+    // ––––– TODO: Add searchController configurations
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Table View
         tableView.delegate = self
         tableView.dataSource = self
+        
+        // Search Bar delegate
+        searchBar.delegate = self
+    
+        
+        // Get Data from API
         getAPIData()
     }
     
     
-    // ––––– TODO: Update API to get an array of restaurant objects
+    // ––––– TODO: Update API results + restaurantsArray Variable + filteredRestaurants
     func getAPIData() {
         API.getRestaurants() { (restaurants) in
             guard let restaurants = restaurants else {
                 return
             }
             self.restaurantsArray = restaurants
+            self.filteredRestaurants = restaurants
             self.tableView.reloadData()
         }
     }
+
+}
+
+
+// ––––– TODO: Pass restaurant to details view controller through segue
+// ––––– TableView Functionality –––––
+extension RestaurantsViewController {
     
-    // Protocol Stubs
-    // How many cells there will be
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return restaurantsArray.count
+        return filteredRestaurants.count
     }
     
-    
-    // ––––– TODO: Configure cell using MVC
+    // ––––– TODO: Configure cell to use [Movie] array instead of [[String:Any]] and Filtered Array
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        //        // Create Restaurant Cell
-        //        let cell = tableView.dequeueReusableCell(withIdentifier: "RestaurantCell") as! RestaurantCell
-        //
-        //        let restaurant = restaurantsArray[indexPath.row]
-        //
-        //        // Set name and phone of cell label
-        //        cell.nameLabel.text = restaurant["name"] as? String
-        //        cell.phoneLabel.text = restaurant["display_phone"] as? String
-        //
-        //        // Get reviews
-        //        let reviews = restaurant["review_count"] as? Int
-        //        cell.reviewsLabel.text = String(reviews!)
-        //
-        //        // Get categories
-        //        let categories = restaurant["categories"] as! [[String: Any]]
-        //        cell.categoryLabel.text = categories[0]["title"] as? String
-        //
-        //        // Set stars images
-        //        let reviewDouble = restaurant["rating"] as! Double
-        //        cell.starsImage.image = Stars.dict[reviewDouble]!
-        //
-        //        // Set Image of restaurant
-        //        if let imageUrlString = restaurant["image_url"] as? String {
-        //            let imageUrl = URL(string: imageUrlString)
-        //            cell.restaurantImage.af.setImage(withURL: imageUrl!)
-        //        }
-        //
-        //        return cell
-        
         // Create Restaurant Cell
         let cell = tableView.dequeueReusableCell(withIdentifier: "RestaurantCell") as! RestaurantCell
-        let restaurant = restaurantsArray[indexPath.row]
-        cell.r = restaurant
+        
+        // Set cell's restaurant
+        cell.r = filteredRestaurants[indexPath.row]
         return cell
     }
     
+    // ––––– TODO: Send restaurant object to DetailViewController
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let cell = sender as! UITableViewCell
-        if let indexPath = tableView.indexPath(for: cell){
-            let r = restaurantsArray[indexPath.row]
+        if let indexPath = tableView.indexPath(for: cell) {
+            let r = filteredRestaurants[indexPath.row]
             let detailViewController = segue.destination as! RestaurantDetailViewController
             detailViewController.r = r
         }
+        
     }
     
 }
+
+
+// ––––– TODO: Add protocol + Functionality for Searching
+// UISearchResultsUpdating informs the class of text changes
+// happening in the UISearchBar
+extension RestaurantsViewController: UISearchBarDelegate {
+    
+    // Search bar functionality
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText != "" {
+            filteredRestaurants = restaurantsArray.filter { (r: Restaurant) -> Bool in
+              return r.name.lowercased().contains(searchText.lowercased())
+            }
+        }
+        else {
+            filteredRestaurants = restaurantsArray
+        }
+        tableView.reloadData()
+    }
+
+    
+    // Show Cancel button when typing
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+       self.searchBar.showsCancelButton = true
+    }
+       
+    // Logic for searchBar cancel button
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+       searchBar.showsCancelButton = false // remove cancel button
+       searchBar.text = "" // reset search text
+       searchBar.resignFirstResponder() // remove keyboard
+       filteredRestaurants = restaurantsArray // reset results to display
+       tableView.reloadData()
+    }
+    
+    
+    
+}
+
+
+
+
+

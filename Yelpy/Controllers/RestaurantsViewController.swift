@@ -8,25 +8,28 @@
 
 import UIKit
 import AlamofireImage
+import Lottie
+import SkeletonView
 
-class RestaurantsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-        
+class RestaurantsViewController: UIViewController {
+    
     // Outlets
     @IBOutlet weak var tableView: UITableView!
-    
-    // Initiliazers
-    // ––––– TODO: change array to –> [Restaurant]
-    var restaurantsArray: [Restaurant] = []
-    
-    // ––––– TODO: Add Search Bar Outlet + Variable for filtered Results
     @IBOutlet weak var searchBar: UISearchBar!
+    // Initiliazers
+    var restaurantsArray: [Restaurant] = []
     var filteredRestaurants: [Restaurant] = []
     
+    // –––––  Lab 4: create an animation view
+    var animationView: AnimationView?
+    
+    var refresh = true
     
     
-    // ––––– TODO: Add searchController configurations
     override func viewDidLoad() {
         super.viewDidLoad()
+        // ––––– Lab 4 TODO: Start animations
+        startAnimations()
         
         // Table View
         tableView.delegate = self
@@ -34,15 +37,16 @@ class RestaurantsViewController: UIViewController, UITableViewDelegate, UITableV
         
         // Search Bar delegate
         searchBar.delegate = self
-    
         
         // Get Data from API
         getAPIData()
+        
+        // ––––– Lab 4: stop animations, you can add a timer to stop the animation
+        Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(self.stopAnimations), userInfo: nil, repeats: false)
     }
     
     
-    // ––––– TODO: Update API results + restaurantsArray Variable + filteredRestaurants
-    func getAPIData() {
+    @objc func getAPIData() {
         API.getRestaurants() { (restaurants) in
             guard let restaurants = restaurants else {
                 return
@@ -50,32 +54,54 @@ class RestaurantsViewController: UIViewController, UITableViewDelegate, UITableV
             self.restaurantsArray = restaurants
             self.filteredRestaurants = restaurants
             self.tableView.reloadData()
+            
         }
     }
+    
+    
+    // ––––– Lab 4 TODO: Call animation functions to start
+    func startAnimations(){
+//        animationView = .init(name: "4762-food-carousel")
+//        animationView!.frame = CGRect(x: view.frame.width/3, y: 0, width: 100, height: 100)
+//        animationView!.contentMode = .scaleAspectFit
+//        view.addSubview(animationView!)
+//        animationView!.loopMode = .loop
+//        animationView!.animationSpeed = 5
+//        animationView!.play()
+        view.showGradientSkeleton()
+    }
 
+    
+    // ––––– Lab 4 TODO: Call animation functions to stop
+    @objc func stopAnimations(){
+//        animationView?.stop()
+//        view.subviews.last?.removeFromSuperview()
+        view.hideSkeleton()
+        refresh = false
+    }
+    
 }
 
-
-// ––––– TODO: Pass restaurant to details view controller through segue
 // ––––– TableView Functionality –––––
-extension RestaurantsViewController {
-    
+extension RestaurantsViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return filteredRestaurants.count
     }
     
-    // ––––– TODO: Configure cell to use [Movie] array instead of [[String:Any]] and Filtered Array
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // Create Restaurant Cell
         let cell = tableView.dequeueReusableCell(withIdentifier: "RestaurantCell") as! RestaurantCell
-        
         // Set cell's restaurant
         cell.r = filteredRestaurants[indexPath.row]
+        if self.refresh {
+            cell.showAnimatedSkeleton()
+        } else {
+            cell.hideSkeleton()
+        }
         return cell
     }
     
-    // ––––– TODO: Send restaurant object to DetailViewController
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let cell = sender as! UITableViewCell
         if let indexPath = tableView.indexPath(for: cell) {
@@ -88,17 +114,13 @@ extension RestaurantsViewController {
     
 }
 
-
-// ––––– TODO: Add protocol + Functionality for Searching
-// UISearchResultsUpdating informs the class of text changes
-// happening in the UISearchBar
 extension RestaurantsViewController: UISearchBarDelegate {
     
     // Search bar functionality
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText != "" {
             filteredRestaurants = restaurantsArray.filter { (r: Restaurant) -> Bool in
-              return r.name.lowercased().contains(searchText.lowercased())
+                return r.name.lowercased().contains(searchText.lowercased())
             }
         }
         else {
@@ -106,24 +128,29 @@ extension RestaurantsViewController: UISearchBarDelegate {
         }
         tableView.reloadData()
     }
-
+    
     
     // Show Cancel button when typing
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-       self.searchBar.showsCancelButton = true
+        self.searchBar.showsCancelButton = true
     }
-       
+    
     // Logic for searchBar cancel button
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-       searchBar.showsCancelButton = false // remove cancel button
-       searchBar.text = "" // reset search text
-       searchBar.resignFirstResponder() // remove keyboard
-       filteredRestaurants = restaurantsArray // reset results to display
-       tableView.reloadData()
+        searchBar.showsCancelButton = false // remove cancel button
+        searchBar.text = "" // reset search text
+        searchBar.resignFirstResponder() // remove keyboard
+        filteredRestaurants = restaurantsArray // reset results to display
+        tableView.reloadData()
     }
     
-    
-    
+}
+
+
+extension RestaurantsViewController: SkeletonTableViewDataSource {
+    func collectionSkeletonView(_ skeletonView: UITableView, cellIdentifierForRowAt indexPath: IndexPath) -> ReusableCellIdentifier {
+        return "RestaurantCell"
+    }
 }
 
 

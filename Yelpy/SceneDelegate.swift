@@ -7,18 +7,61 @@
 //
 
 import UIKit
+import Parse
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
+    
+    
+    // ––––– Lab 5 TODO: Create event listeners for user login + logout
+    
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
+        
+    
+        // Add event listener for when user logs in
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("login"), object: nil, queue: OperationQueue.main) { (Notification) in
+            print("Logged in")
+            self.login()
+        }
+
+        
+        // Add event listener for when user logs out
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("logout"), object: nil, queue: OperationQueue.main) { (Notification) in
+            print("Logged out")
+            self.logout()
+        }
+        
+        // Add User persistance across app restarts
+        if PFUser.current() != nil {
+            login()
+        }
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let chatViewController = storyboard.instantiateViewController(identifier: "ChatViewController")
+        window?.rootViewController = chatViewController
+
+
         guard let _ = (scene as? UIWindowScene) else { return }
     }
+    
+    
+    // ––––– Lab 5 TODO: LOGIN USER
+    func login() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        window?.rootViewController = storyboard.instantiateViewController(withIdentifier: "TabBar")
+    }
+    
+    // ––––– Lab 5 TODO: LOGOUT USER
+    func logout() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        window?.rootViewController = storyboard.instantiateViewController(withIdentifier: "TabBar")
+    }
+    
+    
 
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.

@@ -24,7 +24,7 @@ class ChatViewController: UIViewController {
     var messages: [PFObject] = []
     
     // ––––– LAB 5 TODO: CREATE CHAT MESSAGE OBJECT
-   let chatMessage = PFObject(className: "Message")
+    let chatMessage = PFObject(className: "Message")
 
     
     override func viewDidLoad() {
@@ -37,80 +37,53 @@ class ChatViewController: UIViewController {
         tableView.estimatedRowHeight = 50
         
         
-        // Lab 5 TODO: Reload messages every second (interval of 1 second)
+        // Reload messages every second (interval of 1 second)
         Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.retrieveChatMessages), userInfo: nil, repeats: true)
-        
+        tableView.reloadData()
     }
     
     
     
     /*------  Message Functionality ------*/
     
-    // ––––– ADD FUNCTIONALITY TO retrieveChatMessages()
+    // ––––– Lab 5 TODO: ADD FUNCTIONALITY TO retrieveChatMessages()
     @objc func retrieveChatMessages() {
-        let query = PFQuery(className: "Message") // Message {text: "hello", user: "me"}
+        // ParseClass.TrainingFall2020 is a string from our Constants.swift file
+        let query = PFQuery(className: "TrainingFall2020") // className = group chat name, obtained from Constants.swift
+        query.addDescendingOrder("createdAt")
         query.limit = 20
         query.includeKey("user")
-        query.addDescendingOrder("createdAt")
-        
-        // Fetch data
         query.findObjectsInBackground { (messages, error) in
-            if messages != nil {
-                self.messages = messages!
+            if let messages = messages {
+                self.messages = messages
                 self.tableView.reloadData()
             }
+            else {
+                print(error!.localizedDescription)
+            }
         }
-        print("Fetched messages are: \(messages)")
-        
-        
-//        // ParseClass.TrainingFall2020 is a string from our Constants.swift file
-//        let query = PFQuery(className: "TrainingFall2020") // className = group chat name, obtained from Constants.swift
-//        query.addDescendingOrder("createdAt")
-//        query.limit = 20
-//        query.includeKey("user")
-//        query.findObjectsInBackground { (messages, error) in
-//          if let messages = messages {
-//            self.messages = messages
-//            self.tableView.reloadData()
-//          }
-//          else {
-//            print(error!.localizedDescription)
-//          }
-//        }
     }
     
     
     //  ––––– Lab 5 TODO: SEND MESSAGE TO SERVER AFTER onSend IS CLICKED
     @IBAction func onSend(_ sender: Any) {
-        let chatMessage = PFObject(className: "Message")
-        chatMessage["text"] = messageTextField.text ?? ""
-        chatMessage["user"] = PFUser.current()
-        chatMessage.saveInBackground { (success, error) in
-            if success {
-                print("The message was saved!")
-            } else {
-                print("Problem saving message: \(error?.localizedDescription)")
+        // ParseClass.TrainingFall2020 is a string from our Constants.swift file
+        if messageTextField.text!.isEmpty == false {
+            let chatMessage = PFObject(className: "TrainingFall2020") // className = group chat, Obtained from Constants.swift
+            chatMessage["text"] = messageTextField.text ?? ""
+            chatMessage["user"] = PFUser.current()
+            self.messageTextField.text = "" // reset message
+            chatMessage.saveInBackground { (success, error) in
+                if success {
+                    print("The message was saved!")
+                    
+                } else if let error = error {
+                    print("Problem saving message: \(error.localizedDescription)")
+                }
             }
+        } else {
+            print("\nMessage cannot be empty\n")
         }
-        
-        
-        
-//        // ParseClass.TrainingFall2020 is a string from our Constants.swift file
-//        if messageTextField.text!.isEmpty == false {
-//          let chatMessage = PFObject(className: "TrainingFall2020") // className = group chat, Obtained from Constants.swift
-//          chatMessage["text"] = messageTextField.text ?? ""
-//          chatMessage["user"] = PFUser.current()
-//          self.messageTextField.text = "" // reset message
-//          chatMessage.saveInBackground { (success, error) in
-//            if success {
-//              print("The message was saved!")
-//            } else if let error = error {
-//              print("Problem saving message: \(error.localizedDescription)")
-//            }
-//          }
-//        } else {
-//          print("\nMessage cannot be empty\n")
-//        }
     }
     
     

@@ -29,49 +29,52 @@ class LoginViewController: UIViewController {
     @IBAction func onSignUp(_ sender: Any) {
         // Sign up user
         // Check text field inputs
-        if !usernameAndPasswordEmpty() {
-            // Initialize a user object
+        if usernameAndPasswordNotEmpty() {
+            // initialize a user object
             let newUser = PFUser()
             
-            // Set User properties
+            // set user properties
             newUser.username = usernameTextField.text
             newUser.password = passwordTextField.text
             
-            // Call sign up function on the object
+            // call sign up function on the object
             newUser.signUpInBackground { (success: Bool, error: Error?) in
                 if let error = error {
                     print(error.localizedDescription)
                     self.displaySignupError(error: error)
                 } else {
-                    print("User \(newUser.username!) Registered sucessfully")
+                    print("User \(newUser.username!) Registered successfully")
                     NotificationCenter.default.post(name: NSNotification.Name("login"), object: nil)
+                    
                 }
             }
-        } else {
-            print("Empty Text Error!")
         }
+        
     }
     
     
     // ––––– LAB 5 TODO: LOGIN FUNCTIONALITY
     @IBAction func onLogin(_ sender: Any) {
         // Login user
-        if !usernameAndPasswordEmpty() {
+    
+        // Check text field inputs
+        if usernameAndPasswordNotEmpty() {
             let username = usernameTextField.text ?? ""
             let password = passwordTextField.text ?? ""
             
-            PFUser.logInWithUsername(inBackground: username, password: password) { (user: PFUser?, error) in
+            PFUser.logInWithUsername(inBackground: username, password: password) { (user: PFUser?, error: Error?) in
                 if let error = error {
                     print("User log in failed: \(error.localizedDescription)")
                     self.displayLoginError(error: error)
                 } else {
                     print("User \(username) logged in successfully")
-                    // display view controller that needs to be shown after successful login
+                    // display view controller that needs to shown after successful login
                     NotificationCenter.default.post(name: NSNotification.Name("login"), object: nil)
+
+                    
                 }
             }
         }
-    
         
     }
     
@@ -79,8 +82,15 @@ class LoginViewController: UIViewController {
     
     
     /*------ Handle text field inputs  ------*/
-    func usernameAndPasswordEmpty() -> Bool {
-        return usernameTextField.text!.isEmpty || passwordTextField.text!.isEmpty
+    
+    func usernameAndPasswordNotEmpty() -> Bool {
+        // Check text field inputs
+        if usernameTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
+            displayError()
+            return false
+        } else {
+            return true
+        }
     }
     
     /*------ Alert Controllers ------*/
